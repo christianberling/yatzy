@@ -5,7 +5,6 @@ html {
 	font-family: Arial, Helvetica, sans-serif;
 	padding: 0;
 	margin: 0;
-
 }
 
 *, *:before, *:after {
@@ -14,10 +13,6 @@ html {
 
 html {
 	font-family: Arial, Helvetica, sans-serif;
-}
-
-body {
-	height: 100vh;
 }
 
 table {
@@ -131,7 +126,6 @@ button {
 	align-items: flex-start;
 	width: 1024px; 
 	margin: 20px auto;
-	height: 100%;
 	gap: 20px;
 }
 
@@ -143,7 +137,7 @@ button {
 	border: 1px solid #333;
 	border-radius: 3px;
 	width: 100%;
-	height: 80%;
+	height: 573px;
 	padding: 20px;
 }
 

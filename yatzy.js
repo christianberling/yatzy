@@ -1,22 +1,20 @@
 class Player {
-    constructor(name, id) {
+    constructor(name, id, noOfThurns = 15) {
         this.name = name;
         this.id = id;
         this.hiScore = [];
         this.score = 0;
-        this.noOfThurns = 2;
+        this.noOfThurns = noOfThurns;
     }
 }
 
 class Die {
     constructor() {
         this.value = '0';
-        this.throw();
     }
 
     throw() {
         this.value = Math.floor(Math.random() * 6) + 1;
-        console.log('new dice value: ' + this.value);
     }
 }
 
@@ -33,7 +31,7 @@ class Dice {
     updateValues() {
         this.diceValues = [];
         this.diceCountedValues.fill(0);
-        this.dices.forEach((die, index) => {
+        this.dices.forEach((die) => {
             this.diceValues.push(die.value);
             this.diceCountedValues[die.value - 1] += 1;
         });
@@ -123,19 +121,13 @@ class Dice {
     }
 
     yatzy() {
-        let sum = (this.diceCountedValues.indexOf('5') + 1) * 5;
-        console.log('yatzy diceCountedValues')
-        console.log( this.diceCountedValues );
+        let sum = this.diceCountedValues.indexOf(5);
         return (sum > 0 ? 50 : 0);
     }
 }
 
-class Game {
+class Protocoll {
     constructor(nameField, inputField, sumField, bonusField, totalField) {
-        this.players = [];
-        this.numberOfThrows = 3;
-        this.numberOfTurns = 15;
-        this.currentPlayerID = 0;
         this.nameField = nameField;
         this.inputField = inputField;
         this.sumField = sumField;
@@ -143,60 +135,16 @@ class Game {
         this.totalField = totalField;
     }
 
-    // addPlayer(name, inputField, nameField, sumField, totalSumField, bonusField, id) {
-    //     let player = new Player(name, inputField, nameField, sumField, totalSumField, bonusField, id);
-    //     this.players.push(player);
-    // }
-
-    addPlayer(name) {
-        let player = new Player(name);
-        this.players.push(player);
+    addPlayers(players) {
+        players.forEach((player, index) => {
+            this.nameField[index].innerHTML = player.name;
+        })
     }
 
-    startNewTurn(startID) {
-        if (this.players[this.players.length - 1].noOfThurns > 0) {
-            this.numberOfThrows = 3;
-            if (startID !== undefined) {
-                this.currentPlayerID = startID;
-            } else {
-                this.currentPlayerID = (this.currentPlayerID === this.players.length - 1) ? 0 : this.currentPlayerID + 1;
-            }
-            document.getElementById('messages').innerHTML = 'Det är ' + this.players[this.currentPlayerID].name + 's tur. ';
-            document.getElementById('messages').innerHTML += 'Du har ' + this.numberOfThrows + ' kast kvar. ';
-        } else {
-            this.scoreWinner();
-        }
-    }
-
-    throwDice(dices) {
-        if (0 >= this.numberOfThrows)
-            return;
-        let htmldices = Array.from(document.getElementsByClassName("dice_dice"));
-        let dicecheckboxes = Array.from(document.getElementsByClassName("dicecheckbox"));
-        dices.dices.forEach((die, index) => {
-            if (dicecheckboxes[index].checked == false) {
-                console.log('checkbox not checked ' + index);
-                die.throw();
-            }
-        });
-        htmldices.forEach((dice, index) => {
-            dice.innerHTML = dices.dices[index].value;
-        });
-        dices.updateValues;
-        this.checkPossibleScores(dices);
-        this.numberOfThrows -= 1;
-        if (0 >= this.numberOfThrows) {
-            document.getElementById('messages').innerHTML = 'Du har inga kast kvar, fyll i protokollet genom att klicka på den ruta du vill använda.';
-        } else {
-            document.getElementById('messages').innerHTML = 'Det är ' + this.players[this.currentPlayerID].name + 's tur. ';
-            document.getElementById('messages').innerHTML += 'Du har ' + this.numberOfThrows + ' kast kvar.';
-        }
-    }
-
-    checkPossibleScores(dices) {
+    checkPossibleScores(dices, currentPlayerID) {
         dices.updateValues();
         let currentPlayerInputs = [];
-        for (let index = this.currentPlayerID; index < this.inputField.length; index += 4) {
+        for (let index = currentPlayerID; index < this.inputField.length; index += 4) {
             currentPlayerInputs.push(this.inputField[index]);
         }
         currentPlayerInputs.forEach((cell, index) => {
@@ -227,41 +175,22 @@ class Game {
         })
     }
 
-
-    clearCheckBoxes() {
-        let checkboxes = Array.from(document.getElementsByClassName("dicecheckbox"));
-        checkboxes.forEach((box) => box.checked = false);
-    }
-
-    clearDices() {
-        let htmldices = Array.from(document.getElementsByClassName("dice_dice"));
-        htmldices.forEach((dice, index) => dice.innerHTML = '');
-    }
-
-    // resetGame() {
-    //     document.getElementById("startform").classList.toggle("display_none");
-    //     //document.getElementById("newgamebox").classList.toggle("display_none");
-    //     //store();
-    // }
-
-    writeProtocoll(target) {
+    writeProtocoll(target, currentPlayerID, players) {
         let currentPlayerInputs = [];
-        for (let index = this.currentPlayerID; index < this.inputField.length; index += 4) {
+        for (let index = currentPlayerID; index < this.inputField.length; index += 4) {
             currentPlayerInputs.push(this.inputField[index]);
         }
         currentPlayerInputs.forEach((cell) => {
-            if (!cell.isSameNode(target) && cell.classList.contains('active'))
+            if (!cell.isSameNode(target) && cell.classList.contains('active')){
                 cell.innerHTML = '';
+            }
             cell.classList.remove('active');
         })
-        this.players[this.currentPlayerID].noOfThurns -= 1;
-        this.clearCheckBoxes();
-        this.clearDices();
-        this.startNewTurn();
+        players[currentPlayerID].noOfThurns -= 1;
     }
 
-    calculateScore() {
-        this.players.forEach((player, playerID) => {
+    calculateScore(players) {
+        players.forEach((player, playerID) => {
             let currentPlayerInputs = [];
             for (let index = playerID; index < this.inputField.length; index += 4) {
                 currentPlayerInputs.push(this.inputField[index]);
@@ -271,33 +200,18 @@ class Game {
                 sum += Number(currentPlayerInputs[i].innerHTML);
             }
             this.sumField[playerID].innerHTML = sum;
-
             if (sum >= 63) {
                 sum += 50;
                 this.bonusField[playerID].innerHTML = 50;
             } else {
                 this.bonusField[playerID].innerHTML = 0;
             }
-
-
             for (let i = 6; i < currentPlayerInputs.length; i++) {
                 sum += Number(currentPlayerInputs[i].innerHTML);
             }
             this.totalField[playerID].innerHTML = sum;
-            this.players[playerID].score = sum;
+            player.score = sum;
         });
-    }
-
-    scoreWinner() {
-        this.calculateScore();
-        let winners = [...this.players];
-        winners.sort((playerA, playerB) => playerB.score - playerA.score);
-        this.store();
-        document.getElementById('winner_name').innerHTML = winners[0].name;
-        document.getElementById("winner_box").classList.remove("display_none");
-        document.getElementById("dicebox").classList.add("display_none");
-        document.getElementById("messagebox").classList.add("display_none");
-        document.getElementById("newgamebox").classList.remove("display_none");
     }
 
     clearProtocoll() {
@@ -317,6 +231,95 @@ class Game {
             field.innerHTML = '';
         }
     }
+}
+
+class Game {
+    constructor(nameField, inputField, sumField, bonusField, totalField) {
+        this.dices = new Dice(5);
+        this.players = [];
+        this.protocoll = new Protocoll(nameField, inputField, sumField, bonusField, totalField);
+        this.numberOfThrows = 3;
+        this.currentPlayerID = 0;
+    }
+
+    addPlayers(players) {
+        players.forEach((name, id) => {
+            this.players.push(new Player(name.value, id));
+        }) 
+        this.protocoll.addPlayers(this.players);
+    }
+
+    startNewTurn(startID) {
+        this.clearDices();
+        this.clearCheckBoxes();
+        if (this.players[this.players.length - 1].noOfThurns > 0) {
+            this.numberOfThrows = 3;
+            if (startID !== undefined) {
+                this.currentPlayerID = startID;
+            } else {
+                this.currentPlayerID = (this.currentPlayerID === this.players.length - 1) ? 0 : this.currentPlayerID + 1;
+            }
+            document.getElementById('messages').innerHTML = 'Det är ' + this.players[this.currentPlayerID].name + 's tur. ';
+            document.getElementById('messages').innerHTML += 'Du har ' + this.numberOfThrows + ' kast kvar. ';
+        } else {
+            this.scoreWinner();
+        }
+    }
+
+    throwDice() {
+        if (0 >= this.numberOfThrows)
+            return;
+        let htmldices = Array.from(document.getElementsByClassName("dice_dice"));
+        let dicecheckboxes = Array.from(document.getElementsByClassName("dicecheckbox"));
+        this.dices.dices.forEach((die, index) => {
+            if (dicecheckboxes[index].checked == false) {
+                die.throw();
+            }
+        });
+        htmldices.forEach((dice, index) => {
+            dice.innerHTML = this.dices.dices[index].value;
+        });
+        this.dices.updateValues;
+        this.protocoll.checkPossibleScores(this.dices, this.currentPlayerID);
+        this.numberOfThrows -= 1;
+        if (0 >= this.numberOfThrows) {
+            document.getElementById('messages').innerHTML = 'Du har inga kast kvar, fyll i protokollet genom att klicka på den ruta du vill använda.';
+        } else {
+            document.getElementById('messages').innerHTML = 'Det är ' + this.players[this.currentPlayerID].name + 's tur. ';
+            document.getElementById('messages').innerHTML += 'Du har ' + this.numberOfThrows + ' kast kvar.';
+        }
+    }
+
+    writeProtocoll(target) {
+        this.protocoll.writeProtocoll(target, this.currentPlayerID, this.players);
+        this.clearCheckBoxes();
+        this.clearDices();
+        this.startNewTurn();
+    }
+
+    clearCheckBoxes() {
+        let checkboxes = Array.from(document.getElementsByClassName("dicecheckbox"));
+        checkboxes.forEach((box) => box.checked = false);
+    }
+
+    clearDices() {
+        let htmldices = Array.from(document.getElementsByClassName("dice_dice"));
+        htmldices.forEach((dice, index) => dice.innerHTML = '');
+    }
+
+    clearProtocoll() {
+        this.protocoll.clearProtocoll();
+    }
+    scoreWinner() {
+        this.protocoll.calculateScore(this.players);
+        let winners = [...this.players];
+        winners.sort((playerA, playerB) => playerB.score - playerA.score);
+        document.getElementById('winner_name').innerHTML = winners[0].name;
+        document.getElementById("winner_box").classList.remove("display_none");
+        document.getElementById("dicebox").classList.add("display_none");
+        document.getElementById("messagebox").classList.add("display_none");
+        document.getElementById("newgamebox").classList.remove("display_none");
+    }
 
     store() {
         localStorage.setItem('players', JSON.stringify(this.players));
@@ -328,30 +331,24 @@ class Game {
 
 
 document.addEventListener("DOMContentLoaded", function () {
-    let dices = new Dice(5);
     let nameField = Array.from(document.getElementsByClassName('player_name'));
     let inputField = Array.from(document.getElementsByClassName('input'));
     let sumField = Array.from(document.getElementsByClassName('sum'));
     let bonusField = Array.from(document.getElementsByClassName('bonus'));
     let totalField = Array.from(document.getElementsByClassName('total'));
+
     let game = new Game(nameField, inputField, sumField, bonusField, totalField);
 
     document.getElementById("yatzy").addEventListener("click", (event) => {
         if (event.target.id == 'startbtn') {
             setupGame();
-            game.clearDices();
-            game.clearCheckBoxes();
         } else if (event.target.id == 'newgamebtn') {
-            document.getElementById("startform").classList.remove("display_none");
-            document.getElementById("newgamebox").classList.add("display_none");
-            document.getElementById("winner_box").classList.add("display_none");
-            document.getElementById("dicebox").classList.add("display_none");
-            document.getElementById("messagebox").classList.add("display_none");
+            showNewGameForm();
             game.clearDices();
             game.clearCheckBoxes();
             game.clearProtocoll();
         } else if (event.target.id == 'throwbtn') {
-            game.throwDice(dices);
+            game.throwDice();
         } else if (event.target.classList.contains('active')) {
             game.writeProtocoll(event.target);
         } else if (event.target.id == 'calculatebtn') {
@@ -366,21 +363,27 @@ document.addEventListener("DOMContentLoaded", function () {
             alert('Du måste ange minst två spelare');
             return;
         } else {
-            newPlayers.forEach((name, index) => {
-                game.addPlayer(name.value, index);
-                Array.from(document.getElementsByClassName('player_name'))[index].innerHTML = name.value;
-            });
-
+            game.addPlayers(newPlayers);
             game.startNewTurn(0);
-
-            document.getElementById("startform").classList.add("display_none");
-            document.getElementById("newgamebox").classList.add("display_none");
-            document.getElementById("winner_box").classList.add("display_none");
-            document.getElementById("dicebox").classList.remove("display_none");
-            document.getElementById("messagebox").classList.remove("display_none");
+            showGameControlls();
         }
     }
 
+    function showNewGameForm() {
+        document.getElementById("startform").classList.remove("display_none");
+        document.getElementById("newgamebox").classList.add("display_none");
+        document.getElementById("winner_box").classList.add("display_none");
+        document.getElementById("dicebox").classList.add("display_none");
+        document.getElementById("messagebox").classList.add("display_none");
+    }
+
+    function showGameControlls() {
+        document.getElementById("startform").classList.add("display_none");
+        document.getElementById("newgamebox").classList.add("display_none");
+        document.getElementById("winner_box").classList.add("display_none");
+        document.getElementById("dicebox").classList.remove("display_none");
+        document.getElementById("messagebox").classList.remove("display_none");
+    }
 
     // function store() {
     //     for (player of players) {
